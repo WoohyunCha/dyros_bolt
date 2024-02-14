@@ -1,12 +1,11 @@
 #include "dyros_bolt_controller/odrive_socketcan.h"
-std::ofstream outFile("/home/yong/data.txt");
-
+std::ofstream outFile("~/bolt_ws/data/data.txt");
 namespace odrive {
     ODriveSocketCan::ODriveSocketCan(ros::NodeHandle &nh):
         node(nh)
     {
         node.getParam("axis_can_ids", axis_can_ids_list);
-        const char* ifname = "can0"; // Replace with your CAN interface name
+        const char* ifname = "can0"; // Replace with your CAN interface name. 'ifconfig -a' to check any CAN interfaces. 
         struct sockaddr_can addr;
         struct ifreq ifr;
 
@@ -17,13 +16,12 @@ namespace odrive {
         }
 
         // Get the interface index
-        strcpy(ifr.ifr_name, ifname);
+        strcpy(ifr.ifr_name, ifname);   
         if (ioctl(socketcan, SIOCGIFINDEX, &ifr) < 0) {
             perror("ioctl");
             close(socketcan); // Close the socket on error
             throw std::runtime_error("Failed to get interface index");
         }
-
         // Assign the CAN interface to the socket
         addr.can_family = AF_CAN;
         addr.can_ifindex = ifr.ifr_ifindex;
@@ -33,7 +31,7 @@ namespace odrive {
             close(socketcan);
             throw std::runtime_error("Failed to bind socket");
         }    
-        
+
         for(int i = 0; i < axis_can_ids_list.size(); i++)
         {
             setControllerModes(axis_can_ids_list[i], TORQUE_CONTROL, PASSTHROUGH);
@@ -45,7 +43,7 @@ namespace odrive {
     void ODriveSocketCan::canReceiveMessages() {
         struct can_frame recv_frame;
         while (true) {
-            int nbytes = read(socketcan, &recv_frame, sizeof(struct can_frame));
+            int nbytes = read(socketcan, &recv_frame, sizeof(struct can_frame));  
             if (nbytes < 0) {
                 perror("read");
                 break;
@@ -59,8 +57,8 @@ namespace odrive {
                     axis_current_state[static_cast<int>(can_axis_id_)] = static_cast<int>(recv_frame.data[4]);
                     axis_controller_state[static_cast<int>(can_axis_id_)] = static_cast<int>(recv_frame.data[7]);
                 case ODriveCommandId::GET_ENCODER_ESTIMATE:
-                    axis_angle[static_cast<int>(can_axis_id_)] = double(bytesToFloat(recv_frame.data)) * 2 * M_PI / 9;
-                    axis_velocity[static_cast<int>(can_axis_id_)] = double(bytesToFloat(recv_frame.data + 4)) * 2 * M_PI / 9;
+                    axis_angle[static_cast<int>(can_axis_id_)] = double(bytesToFloat(recv_frame.data)) * 2 * M_PI / 9; // data's 0~4 bytes into an integer. *data is an array of 8 bytes
+                    axis_velocity[static_cast<int>(can_axis_id_)] = double(bytesToFloat(recv_frame.data + 4)) * 2 * M_PI / 9; // data's 4~8 bytes into an integer.
                 case ODriveCommandId::GET_IQ:
                     axis_current[static_cast<int>(can_axis_id_)] = double(bytesToFloat(recv_frame.data + 4));
                 }
@@ -253,3 +251,4 @@ namespace odrive {
     }
 
 }
+

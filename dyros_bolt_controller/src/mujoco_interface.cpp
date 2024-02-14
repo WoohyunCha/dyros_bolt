@@ -50,7 +50,6 @@ void mujoco_interface::jointStateCallback(const sensor_msgs::JointStateConstPtr 
       if(DyrosBoltModel::JOINT_NAME[i] == msg->name[j].data())
       {
         q_(i) = msg->position[j];
-        // std::cout << DyrosBoltModel::JOINT_NAME[i] << ": " << q_(i) << std::endl;
         // q_virtual_(i+6) = msg->position[j];
         q_dot_(i) = msg->velocity[j];
         // q_dot_virtual_(i+6) = msg->velocity[j];
@@ -61,8 +60,8 @@ void mujoco_interface::jointStateCallback(const sensor_msgs::JointStateConstPtr 
   }
   //virtual joint
   for(int i=0;i<6;i++){
-    mujoco_virtual_(i) = msg->position[i];
-    mujoco_virtual_dot_(i) = msg->velocity[i];
+    virtual_q_(i) = msg->position[i];
+    virtual_q_dot_(i) = msg->velocity[i];
   //  q_ext_(i) = msg->position[i];
   //  q_ext_(i+6) = msg->position[i+6];
   }
@@ -161,6 +160,7 @@ void mujoco_interface::simCommandCallback(const std_msgs::StringConstPtr &msg)
     mujoco_init_receive =true;
     std_msgs::String rst_msg_;
     rst_msg_.data="INIT";
+
     mujoco_sim_command_pub_.publish(rst_msg_);
   }
 

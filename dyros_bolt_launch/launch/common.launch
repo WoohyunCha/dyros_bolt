@@ -9,5 +9,6 @@
     <param name="ctrl_mode" type="string" value="$(arg ctrl_mode)" />
     <rosparam file="$(find dyros_bolt_controller)/odrive_config/odrive.yaml" />
     <rosparam file="$(find dyros_bolt_controller)/odrive_config/gain.yaml" />
+    <rosparam file="$(find dyros_bolt_controller)/controller_config/obsscales.yaml" />
   </node>
 </launch>

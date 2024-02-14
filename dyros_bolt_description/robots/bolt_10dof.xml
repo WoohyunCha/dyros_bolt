@@ -1,14 +1,18 @@
-<mujoco model="bolt">
+<mujoco model="bolt10">
     <include file="simulation_scene.xml"/>
 
     <asset>
-        <mesh name="bolt_body" file="bolt_body.stl" />
-        <mesh name="bolt_hip_fe_left_side" file="bolt_hip_fe_left_side.stl" />
-        <mesh name="upper_leg_200mm_left_side" file="upper_leg_200mm_left_side.stl" />
-        <mesh name="lower_leg_200mm_left_side" file="lower_leg_200mm_left_side.stl" />
-        <mesh name="bolt_hip_fe_right_side" file="bolt_hip_fe_right_side.stl" />
-        <mesh name="upper_leg_200mm_right_side" file="upper_leg_200mm_right_side.stl" />
-        <mesh name="lower_leg_200mm_right_side" file="lower_leg_200mm_right_side.stl" />
+        <mesh name="bolt_link" file="bolt_link.stl" />
+        <mesh name="L_HipRoll_Link" file="L_HipRoll_Link.stl" />
+        <mesh name="L_HipPitch_Link" file="L_HipPitch_Link.stl" />
+        <mesh name="L_Upper_Leg" file="L_Upper_Leg.stl" />
+        <mesh name="L_Lower_Leg" file="L_Lower_Leg.stl" />
+        <mesh name="L_Foot" file="L_Foot.stl" />
+        <mesh name="R_HipRoll_Link" file="R_HipRoll_Link.stl" />
+        <mesh name="R_HipPitch_Link" file="R_HipPitch_Link.stl" />
+        <mesh name="R_Upper_Leg" file="R_Upper_Leg.stl" />
+        <mesh name="R_Lower_Leg" file="R_Lower_Leg.stl" />
+        <mesh name="R_Foot" file="R_Foot.stl" />
 
         <texture type="skybox" builtin="gradient" width="128" height="128" rgb1="0.4 0.6 0.8" rgb2="0 0 0"/>
         <texture name="texgeom" type="cube" builtin="flat" mark="cross" width="128" height="128" rgb1="0.6 0.6 0.6" rgb2="0.6 0.6 0.6" markrgb="1 1 1"/>
@@ -24,7 +28,7 @@
         <light directional="true" diffuse=".5 .5 .5" pos="10 0 0" dir="-10 0 0"/>
 
         <body name="base_link" pos="0 0 0">
-            <inertial pos="0 0 0" quat="0 0.707107 0 0.707107" mass="0.614369" diaginertia="0.0247612 0.0193811 0.00578574" />
+            <inertial pos="0.004 0 -0.002" quat="0 0.707107 0 0.707107" mass="0.614369" diaginertia="0.0247612 0.0193811 0.00578574" />
             <joint name="virtual" type="free" />
             <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="bolt_body" />
             <site name="Pelvis_IMU" type="cylinder" size="0.005 0.005" group="4" rgba=".1 .1 .9 1"/>

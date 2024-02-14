@@ -20,6 +20,7 @@ add_message_files(
   WalkingCommand.msg
   JumpingCommand.msg
   WalkingState.msg
+  RLCommand.msg
 )
 
 add_action_files(DIRECTORY action FILES 

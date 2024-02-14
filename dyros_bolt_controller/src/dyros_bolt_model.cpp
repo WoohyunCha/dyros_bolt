@@ -1,9 +1,12 @@
 #include "dyros_bolt_controller/dyros_bolt_model.h"
+#include "fstream"
 
 
 
 namespace dyros_bolt_controller
 {
+using namespace Eigen;
+// std::ofstream torque_txt("/home/yong/Desktop/torque.txt");
 constexpr const char* DyrosBoltModel::EE_NAME[2];
 constexpr const size_t DyrosBoltModel::HW_TOTAL_DOF;
 constexpr const size_t DyrosBoltModel::MODEL_DOF;
@@ -12,16 +15,16 @@ constexpr const size_t DyrosBoltModel::MODEL_WITH_VIRTUAL_DOF;
   
 // These should be replaced by YAML or URDF or something
 const std::string DyrosBoltModel::JOINT_NAME[DyrosBoltModel::HW_TOTAL_DOF] = {
-    "FL_HAA", "FL_HFE", "FL_KFE", "FL_ANKLE",
-    "FR_HAA", "FR_HFE", "FR_KFE", "FR_ANKLE"};
+     "L_HipYaw", "L_HipRoll", "L_HipPitch", "L_KneePitch", "L_AnklePitch",
+    "R_HipYaw", "R_HipRoll", "R_HipPitch", "R_KneePitch", "R_AnklePitch"};
 
 // Dynamixel Hardware IDs
 const int DyrosBoltModel::JOINT_ID[DyrosBoltModel::HW_TOTAL_DOF] = {
-    1,2,3,4,
-    5,6,7,8};       
+    1,2,3,4,5,
+    6,7,8,9,10};       
 
 DyrosBoltModel::DyrosBoltModel() :
-    joint_start_index_{0, 4}
+    joint_start_index_{0, 5}
 {
     base_position_.setZero();
     q_.setZero();
@@ -30,27 +33,26 @@ DyrosBoltModel::DyrosBoltModel() :
 
     std::string desc_package_path = ros::package::getPath("dyros_bolt_description");
     // std::string urdf_path = desc_package_path + "/robots/bolt.urdf";
-    std::string urdf_path = desc_package_path + "/robots/bolt_with_passive.urdf";
-    // std::string urdf_path = desc_package_path + "/robots/dyros_tocabi.urdf";
+    std::string urdf_path = desc_package_path + "/robots/bolt10.urdf";
 
     ROS_INFO("Loading DYROS BOLT description from = %s",urdf_path.c_str());
-    rd_.LoadModelData(urdf_path, true, 1); 
+    RigidBodyDynamics::Addons::URDFReadFromFile(urdf_path.c_str(), &model_, true, false);
     ROS_INFO("Successfully loaded.");
-    ROS_INFO("Total DoF = %d", rd_.model_.dof_count);
-    ROS_INFO("Total DoF = %d", rd_.model_.q_size);
-    ROS_INFO("Total DoF = %d", rd_.model_.qdot_size);
+    ROS_INFO("Total DoF = %d", model_.dof_count);
+    ROS_INFO("Total DoF = %d", model_.q_size);
+    ROS_INFO("Total DoF = %d", model_.qdot_size);
 
-    if(rd_.model_.dof_count != MODEL_WITH_VIRTUAL_DOF)
+    if(model_.dof_count != MODEL_WITH_VIRTUAL_DOF)
     {
         ROS_WARN("The DoF in the model file and the code do not match.");
-        ROS_WARN("Model file = %d, Code = %d", rd_.model_.dof_count, (int)MODEL_WITH_VIRTUAL_DOF);
+        ROS_WARN("Model file = %d, Code = %d", model_.dof_count, (int)MODEL_WITH_VIRTUAL_DOF);
     }
 
     for (size_t i=0; i<2; i++)
     {
-        end_effector_id_[i] = rd_.model_.GetBodyId(EE_NAME[i]);
+        end_effector_id_[i] = model_.GetBodyId(EE_NAME[i]);
         ROS_INFO("%s: id - %d",EE_NAME[i], end_effector_id_[i]);
-        std::cout << rd_.model_.mBodies[end_effector_id_[i]].mCenterOfMass << std::endl;
+        std::cout << model_.mBodies[end_effector_id_[i]].mCenterOfMass << std::endl;
     }
 
     for (size_t i=0; i<HW_TOTAL_DOF; i++)
@@ -61,13 +63,19 @@ DyrosBoltModel::DyrosBoltModel() :
 
 void DyrosBoltModel::test()
 {
-    Eigen::Matrix<double, DyrosBoltModel::MODEL_WITH_VIRTUAL_DOF+1, 1> q_vjoint;
+    // Eigen::Matrix<double, DyrosBoltModel::MODEL_WITH_VIRTUAL_DOF+1, 1> q_vjoint;
+    Eigen::Matrix<double, DyrosBoltModel::MODEL_WITH_VIRTUAL_DOF, 1> q_vjoint;
     Eigen::Matrix<double, DyrosBoltModel::MODEL_WITH_VIRTUAL_DOF, 1> qdot_vjoint;
     q_vjoint.setZero();
+    q_vjoint(MODEL_WITH_VIRTUAL_DOF) = 1;
+    // q_vjoint << 0, 0, 0.43, 0, 0, 0,
+                // 0, 0.436332313, -0.872664626, 0.436332313,
+                // 0, 0.436332313, -0.872664626, 0.436332313;
+
     qdot_vjoint.setZero();
 
-    updateKinematics(q_vjoint, qdot_vjoint, qdot_vjoint);
 
+    updateKinematics(q_vjoint, qdot_vjoint, qdot_vjoint);
 
     std::cout << "left_leg_jacobian_" << std::endl;
     std::cout << leg_jacobian_[0] << std::endl << std::endl;
@@ -86,32 +94,36 @@ void DyrosBoltModel::updateKinematics(const Eigen::VectorXd& q, const Eigen::Vec
     // q_virtual_dot_ = qdot;
     // q_virtual_ddot_ = qddot;
 
+    RigidBodyDynamics::UpdateKinematicsCustom(model_, &q, &qdot, &qddot);
 
-    rd_.UpdateKinematics(q, qdot, qddot, true);
+    Eigen::VectorXd G_, B_;
+    G_.setZero(MODEL_WITH_VIRTUAL_DOF);
+    B_.setZero(MODEL_WITH_VIRTUAL_DOF);
 
-    // rd_.AddContactConstraint("FL_FOOT",DWBC::CONTACT_POINT,Vector3d::Zero(),Vector3d(0,0,1));
-    // rd_.AddContactConstraint("FR_FOOT",DWBC::CONTACT_POINT,Vector3d::Zero(),Vector3d(0,0,1));
+    RigidBodyDynamics::NonlinearEffects(model_, q, qddot, G_);
+    RigidBodyDynamics::NonlinearEffects(model_, q, qdot, B_);
 
-    // rd_.SetContact(1,1);
-    // rd_.CalcGravCompensation();
-    // rd_.CalcContactRedistribute();
-    // command_Torque = rd_.torque_grav_ + rd_.torque_contact_;
+    // Gravity + Coriolis
+    // std::cout << "GRAVITY"<<std::endl;
+    // std::cout << G_.block<MODEL_DOF,1>(6,0).transpose() << std::endl;
+    // std::cout << B_.block<MODEL_DOF,1>(6,0).transpose() << std::endl;
 
+    command_Torque = G_.block<MODEL_DOF,1>(10,0);
+    // command_Torque.setZero(MODEL_DOF);
 
-    getInertiaMatrixDoF(&full_inertia_mat_);
-    getInertiaMatrixlegDoF(&leg_inertia_mat_);
+    // getInertiaMatrixDoF(&full_inertia_mat_);
+    // getInertiaMatrixlegDoF(&leg_inertia_mat_);
     getCenterOfMassPosition(&com_);
     getCenterOfMassPositionDot(&comDot_);
     for(unsigned int i=0; i<2; i++)
     {
         getTransformEndEffector((EndEffector)i, &current_transform_[i]);
-
-        getJacobianMatrix4DoF((EndEffector)i, &leg_jacobian_[i]);
-        getJacobianMatrix14DoF((EndEffector)i, &leg_with_vlink_jacobian_[i]);
+        getJacobianMatrix5DoF((EndEffector)i, &leg_jacobian_[i]);
+        getJacobianMatrix16DoF((EndEffector)i, &leg_with_vlink_jacobian_[i]);
     }
 }
 
-void DyrosBoltModel::updateSensorData(const Eigen::Vector6d &r_ft, const Eigen::Vector6d &l_ft, const Eigen::Vector12d &q_ext, const Eigen::Vector3d &acc, const Eigen::Vector3d &angvel, const Eigen::Vector3d &grav_rpy)
+void DyrosBoltModel::updateSensorData(const Eigen::Vector6d &r_ft, const Eigen::Vector6d &l_ft, const Eigen::Vector20d &q_ext, const Eigen::Vector3d &acc, const Eigen::Vector3d &angvel, const Eigen::Vector3d &grav_rpy)
 {
     r_ft_wrench_ = r_ft;
     l_ft_wrench_ = l_ft;
@@ -167,82 +179,101 @@ void DyrosBoltModel::getTransformEndEffector // must call updateKinematics befor
 (EndEffector ee, Eigen::Isometry3d* transform_matrix)
 {
     // *transform_matrix = rd_.link_[end_effector_id_[ee]].GetSpatialTranform();
-    transform_matrix->translation() = rd_.link_[end_effector_id_[ee]-2].xpos;
-    transform_matrix->linear() =rd_.link_[end_effector_id_[ee]-2].rotm;
+    // transform_matrix->translation() = rd_.link_[end_effector_id_[ee]-2].xpos;
+    // transform_matrix->linear() =rd_.link_[end_effector_id_[ee]-2].rotm;
+
+    transform_matrix->translation() = RigidBodyDynamics::CalcBodyToBaseCoordinates
+      (model_, q_virtual_, end_effector_id_[ee], base_position_, false);
+    transform_matrix->linear() = RigidBodyDynamics::CalcBodyWorldOrientation
+      (model_, q_virtual_, end_effector_id_[ee], false).transpose();
 }
 
-// void DyrosBoltModel::getTransformEndEffector // must call updateKinematics before calling this function
-// (EndEffector ee, Eigen::Vector3d* position, Eigen::Matrix3d* rotation)
-// {
-//     *position = RigidBodyDynamics::CalcBodyToBaseCoordinates
-//         (model_, q_virtual_, end_effector_id_[ee], base_position_, false);
-//     *rotation = RigidBodyDynamics::CalcBodyWorldOrientation(
-//         model_, q_virtual_ , end_effector_id_[ee], false).transpose();
-// }
 
-// void DyrosBoltModel::getTransformEndEffector
-// (EndEffector ee, const Eigen::VectorXd& q, bool update_kinematics,
-//  Eigen::Vector3d* position, Eigen::Matrix3d* rotation)
-// {
-//     Eigen::Matrix<double, 12, 1> q_new;
-//     q_new = q_virtual_;
-//     q_new.segment<6>(joint_start_index_[ee]) = q;
-//     if (update_kinematics)
-//     {
-//     q_virtual_ = q_new;
-//     }
-//     *position = RigidBodyDynamics::CalcBodyToBaseCoordinates
-//         (model_,q_new,end_effector_id_[ee], base_position_, update_kinematics);
-//     *rotation = RigidBodyDynamics::CalcBodyWorldOrientation(
-//         model_, q_new, end_effector_id_[ee], update_kinematics).transpose();
-//     // RigidBodyDynamics::Calcpo
-//     // model_.mBodies[0].mCenterOfMass
-// }
-
-
-void DyrosBoltModel::getJacobianMatrix4DoF(EndEffector ee, Eigen::Matrix<double, 6, 4> *jacobian)
+void DyrosBoltModel::getJacobianMatrix5DoF(EndEffector ee, Eigen::Matrix<double, 6, 5> *jacobian)
 {
-    *jacobian = rd_.link_[end_effector_id_[ee]-2].jac_.leftCols<4>(joint_start_index_[ee]+6);
+    // *jacobian = rd_.link_[end_effector_id_[ee]-2].jac_.middleCols<4>(joint_start_index_[ee]+6);
+    Eigen::MatrixXd full_jacobian(6,MODEL_WITH_VIRTUAL_DOF);
+    full_jacobian.setZero();
+    RigidBodyDynamics::CalcPointJacobian6D(model_, q_virtual_, end_effector_id_[ee],
+                                            Eigen::Vector3d::Zero(), full_jacobian, false);
+    // swap
+    jacobian->block<3, 4>(0, 0) = full_jacobian.block<3, 4>(3, joint_start_index_[ee]+6);
+    jacobian->block<3, 4>(3, 0) = full_jacobian.block<3, 4>(0, joint_start_index_[ee]+6);
 }
 
-void DyrosBoltModel::getJacobianMatrix14DoF(EndEffector ee, Eigen::Matrix<double, 6, MODEL_WITH_VIRTUAL_DOF> *jacobian)
+void DyrosBoltModel::getJacobianMatrix16DoF(EndEffector ee, Eigen::Matrix<double, 6, MODEL_WITH_VIRTUAL_DOF> *jacobian)
 {
+    Eigen::MatrixXd full_jacobian(6,MODEL_WITH_VIRTUAL_DOF);
+    full_jacobian.setZero();
+    RigidBodyDynamics::CalcPointJacobian6D(model_, q_virtual_, end_effector_id_[ee],
+                                            Eigen::Vector3d::Zero(), full_jacobian, false);
     switch (ee)
     {
     case EE_LEFT_FOOT:
         // Virtual Link
-        jacobian->block<6, 6>(0, 0) = rd_.link_[end_effector_id_[ee]-2].jac_.leftCols(6);
+        // jacobian->block<6, 6>(0, 0) = rd_.link_[end_effector_id_[ee]-2].jac_.leftCols(6);
         // left Leg Link
-        jacobian->block<6, 4>(0, 6) = rd_.link_[end_effector_id_[ee]-2].jac_.leftCols<4>(joint_start_index_[ee]+6);
+        // jacobian->block<6, 4>(0, 6) = rd_.link_[end_effector_id_[ee]-2].jac_.leftCols<4>(joint_start_index_[ee]+6);
+        // Virtual Link
+        jacobian->block<3, 6>(0, 0) = full_jacobian.block<3, 6>(3, 0);
+        jacobian->block<3, 6>(3, 0) = full_jacobian.block<3, 6>(0, 0);
+
+        // left Leg Link
+        jacobian->block<3, 5>(0, 6) = full_jacobian.block<3, 5>(3, joint_start_index_[ee]+6);
+        jacobian->block<3, 5>(3, 6) = full_jacobian.block<3, 5>(0, joint_start_index_[ee]+6);
         break;
     case EE_RIGHT_FOOT:
         // Virtual Link
-        jacobian->block<6, 6>(0, 0) = rd_.link_[end_effector_id_[ee]-2].jac_.leftCols(6);
+        // jacobian->block<6, 6>(0, 0) = rd_.link_[end_effector_id_[ee]-2].jac_.leftCols(6);
         // right Leg Link
-        jacobian->block<6, 4>(0, 10) = rd_.link_[end_effector_id_[ee]-2].jac_.leftCols<4>(joint_start_index_[ee]+6);
+        // jacobian->block<6, 4>(0, 10) = rd_.link_[end_effector_id_[ee]-2].jac_.leftCols<4>(joint_start_index_[ee]+6);
+        // Virtual Link
+        jacobian->block<3, 6>(0, 0) = full_jacobian.block<3, 6>(3, 0);
+        jacobian->block<3, 6>(3, 0) = full_jacobian.block<3, 6>(0, 0);
+
+        // left Leg Link
+        jacobian->block<3, 5>(0, 10) = full_jacobian.block<3, 5>(3, joint_start_index_[ee]+6);
+        jacobian->block<3, 5>(3, 10) = full_jacobian.block<3, 5>(0, joint_start_index_[ee]+6);
         break;
     }
 }
 
 void DyrosBoltModel::getCenterOfMassPosition(Eigen::Vector3d* position)
 {
-    *position = rd_.com_pos;
+    // *position = rd_.com_pos;
+    RigidBodyDynamics::Math::Vector3d com, com_dot;
+    com.setZero();
+    Eigen::VectorXd qddot;
+    qddot.setZero(MODEL_WITH_VIRTUAL_DOF);
+    double mass;
+    ///////////////////////////////////////////model//..q..qdot..qddot..mass..com..comdot.comddot..angularmomentum..change_of_angularmomentum..updatekin
+    RigidBodyDynamics::Utils::CalcCenterOfMass(model_, q_virtual_, q_virtual_dot_, &qddot, mass, com, &com_dot, NULL, NULL, NULL, false);
+
+    *position = com;
 }
 
 void DyrosBoltModel::getCenterOfMassPositionDot(Eigen::Vector3d* position_dot)
 {
-    *position_dot = rd_.com_vel;
+    // *position_dot = rd_.com_vel;
+    RigidBodyDynamics::Math::Vector3d com, com_dot;
+    com.setZero();
+    Eigen::VectorXd qddot;
+    qddot.setZero(MODEL_WITH_VIRTUAL_DOF);
+    double mass;
+
+    RigidBodyDynamics::Utils::CalcCenterOfMass(model_, q_virtual_, q_virtual_dot_, &qddot, mass, com, &com_dot, NULL, NULL, NULL, false);
+    *position_dot = com_dot;
 }
 
 void DyrosBoltModel::getInertiaMatrixDoF(Eigen::Matrix<double, MODEL_WITH_VIRTUAL_DOF, MODEL_WITH_VIRTUAL_DOF> *inertia)
 {
-    *inertia = rd_.A_;
+    // *inertia = rd_.A_;
 }
 
 void DyrosBoltModel::getInertiaMatrixlegDoF(Eigen::Matrix<double, MODEL_WITH_VIRTUAL_DOF, MODEL_WITH_VIRTUAL_DOF> *leg_inertia)
 {
 //   leg_inertia->block<MODEL_WITH_VIRTUAL_DOF, MODEL_WITH_VIRTUAL_DOF>(0, 0) = rd_.A_.block<MODEL_WITH_VIRTUAL_DOF, MODEL_WITH_VIRTUAL_DOF>(0, 0);
-    *leg_inertia = rd_.A_;
+    // *leg_inertia = rd_.A_;
 }
 
 }

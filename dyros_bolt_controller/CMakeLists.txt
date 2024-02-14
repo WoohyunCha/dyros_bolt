@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.0.2)
+list(APPEND CMAKE_PREFIX_PATH "~/bolt_ws/libtorch/")
+
 project(dyros_bolt_controller)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11 -g)
+add_compile_options(-std=c++17 -g)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -19,9 +21,10 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   mujoco_ros_msgs
 )
-find_package(dwbc REQUIRED)
+# find_package(dwbc REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Torch REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -127,10 +130,11 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
+  ${TORCH_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
-)
+  )
 file(GLOB_RECURSE HeaderFiles "include/*.h")
 add_custom_target(dyros_bolt_control_headers SOURCES ${HeaderFiles})
 file(GLOB BRIDGE_SRC
@@ -142,6 +146,7 @@ file(GLOB CONTROLLER_SRC
     "src/dyros_bolt_model.cpp"
     "src/joint_controller.cpp"
     "src/jumping_controller.cpp"
+    "src/rl_controller.cpp"
     "src/odrive_socketcan.cpp"
     )
 
@@ -180,8 +185,9 @@ add_executable(${PROJECT_NAME} src/dyros_bolt_controller.cpp)
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(dyros_bolt_controller_lib
-    ${catkin_LIBRARIES}
-    ${Boost_LIBRARIES}
+  ${TORCH_LIBRARIES}
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
 
     -L/usr/local/lib
     -lrbdl
@@ -193,7 +199,7 @@ target_link_libraries(dyros_bolt_controller
   dyros_bolt_controller_lib
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
-  dwbc
+  # dwbc
 )
 
 #############

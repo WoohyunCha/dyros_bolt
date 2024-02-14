@@ -3,7 +3,7 @@
 #include "dyros_bolt_controller/dyros_bolt_model.h"
 #include "fstream"
 
-
+using namespace Eigen;
 namespace dyros_bolt_controller
 {
 class JumpingController
@@ -50,7 +50,7 @@ class JumpingController
         unsigned int jumping_tick_ = 0;
         const double &current_time_; // updated by control_base
 
-        Vector8d q_des;
+        Eigen::Vector8d q_des;
         VectorQd desired_q_;
         const VectorQd& current_q_;
         const VectorQd& current_qdot_;
@@ -75,7 +75,7 @@ class JumpingController
         Eigen::Isometry3d lfoot_float_current_;
         Eigen::Isometry3d rfoot_float_current_;
 
-        
+        VectorQd g_;
 
 };
 }

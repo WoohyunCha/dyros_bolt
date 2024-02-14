@@ -123,8 +123,11 @@ void JumpingController::writeDesired(const unsigned int *mask, VectorQd& desired
     {     
         if( mask[i] >= PRIORITY && mask[i] < PRIORITY * 2 )
         {
+            
             desired_q(i) = desired_q_(i);
-        }         
+        }   
+        desired_q(i) = -g_(i);
+      
     }
 }
 
@@ -158,7 +161,7 @@ void JumpingController::getRobotState()
     rfoot_float_current_ = model_.getCurrentTransform((DyrosBoltModel::EndEffector)1);
 
     pelv_float_current_.setIdentity();
-
+    
 }
 
 void JumpingController::getComTrajectory()

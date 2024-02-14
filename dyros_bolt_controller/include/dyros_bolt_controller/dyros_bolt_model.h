@@ -7,13 +7,14 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <rbdl/rbdl.h>
-// #include <rbdl/addons/urdfreader/urdfreader.h>
-#include <libdwbc/dwbc.h>
+#include <rbdl/addons/urdfreader/urdfreader.h>
+// #include <libdwbc/dwbc.h>
 #include "math_type_define.h"
 
 
 namespace dyros_bolt_controller
 {
+    // using namespace Eigen;
 
 class DyrosBoltModel
 {
@@ -22,18 +23,18 @@ public:
     
     enum EndEffector : unsigned int {EE_LEFT_FOOT, EE_RIGHT_FOOT};
 
-    static constexpr size_t HW_TOTAL_DOF = 8;
-    static constexpr size_t MODEL_DOF = 8;
-    static constexpr size_t MODEL_WITH_VIRTUAL_DOF = 14;
+    static constexpr size_t HW_TOTAL_DOF = 10;
+    static constexpr size_t MODEL_DOF = 10;
+    static constexpr size_t MODEL_WITH_VIRTUAL_DOF = 16;
 
     static const std::string JOINT_NAME[HW_TOTAL_DOF];
     static const int JOINT_ID[HW_TOTAL_DOF];
 
-    static constexpr const char* EE_NAME[2] = {"FL_FOOT", "FR_FOOT"};
+    static constexpr const char* EE_NAME[2] = {"L_Foot", "R_Foot"};
 
     unsigned int end_effector_id_[2];
     const unsigned int joint_start_index_[2];
-    VectorXd command_Torque;
+    Eigen::VectorXd command_Torque;
 
     void test();
 
@@ -52,7 +53,7 @@ public:
     void updateKinematics(const Eigen::VectorXd &q, const Eigen::VectorXd &qdot, const Eigen::VectorXd &qddot);
     void updateSensorData(const Eigen::Vector6d &r_ft, const Eigen::Vector6d &l_ft);
 
-    void updateSensorData(const Eigen::Vector6d &r_ft, const Eigen::Vector6d &l_ft, const Eigen::Vector12d &q_ext, const Eigen::Vector3d &acc, const Eigen::Vector3d &angvel, const Eigen::Vector3d &grav_rpy);
+    void updateSensorData(const Eigen::Vector6d &r_ft, const Eigen::Vector6d &l_ft, const Eigen::Vector20d &q_ext, const Eigen::Vector3d &acc, const Eigen::Vector3d &angvel, const Eigen::Vector3d &grav_rpy);
 
     void updateSimCom(const Eigen::Vector3d &sim_com);
     void updateSimGyro(const Eigen::Vector3d &sim_gyro);
@@ -71,8 +72,8 @@ public:
     //                                 Eigen::Vector3d* position, Eigen::Matrix3d* rotation);
 
 
-    void getJacobianMatrix4DoF(EndEffector ee, Eigen::Matrix<double, 6, 4> *jacobian);
-    void getJacobianMatrix14DoF(EndEffector ee, Eigen::Matrix<double, 6, MODEL_WITH_VIRTUAL_DOF> *jacobian);
+    void getJacobianMatrix5DoF(EndEffector ee, Eigen::Matrix<double, 6, 5> *jacobian);
+    void getJacobianMatrix16DoF(EndEffector ee, Eigen::Matrix<double, 6, MODEL_WITH_VIRTUAL_DOF> *jacobian);
 
     void getCenterOfMassPosition(Eigen::Vector3d* position);
     void getCenterOfMassPositionDot(Eigen::Vector3d* position);
@@ -80,9 +81,9 @@ public:
     void getInertiaMatrixDoF(Eigen::Matrix<double, MODEL_WITH_VIRTUAL_DOF, MODEL_WITH_VIRTUAL_DOF> *inertia);
     void getInertiaMatrixlegDoF(Eigen::Matrix<double, MODEL_WITH_VIRTUAL_DOF, MODEL_WITH_VIRTUAL_DOF> *leg_inertia);
 
-    const Eigen::Vector12d& getCurrentExtencoder(){ return q_ext_; }
+    const Eigen::Vector20d& getCurrentExtencoder(){ return q_ext_; }
     const Eigen::Isometry3d& getCurrentTransform(EndEffector ee) { return current_transform_[ee]; }
-    const Eigen::Matrix<double, 6, 4>& getLegJacobian(EndEffector ee) { return leg_jacobian_[ee]; }
+    const Eigen::Matrix<double, 6, 5>& getLegJacobian(EndEffector ee) { return leg_jacobian_[ee]; }
     const Eigen::Matrix<double, 6, MODEL_WITH_VIRTUAL_DOF>& getLegWithVLinkJacobian(EndEffector ee) { return leg_with_vlink_jacobian_[ee]; }
     const Eigen::Vector3d& getCurrentCom(){ return com_;}
     const Eigen::Vector3d& getCurrentComDot(){return comDot_;}
@@ -110,14 +111,14 @@ public:
     const Eigen::Matrix<double, MODEL_WITH_VIRTUAL_DOF, MODEL_WITH_VIRTUAL_DOF>& getFullInertia() { return full_inertia_mat_; }
 
 private:
-    DWBC::RobotData rd_;
-    // RigidBodyDynamics::Model model_;
+    // DWBC::RobotData rd_;
+    RigidBodyDynamics::Model model_;
     
-    Eigen::Vector6d q_;
+    Eigen::Vector10d q_;
     Eigen::Matrix<double, MODEL_WITH_VIRTUAL_DOF, 1> q_virtual_;
     Eigen::Matrix<double, MODEL_WITH_VIRTUAL_DOF, 1> q_virtual_dot_;
     Eigen::Matrix<double, MODEL_WITH_VIRTUAL_DOF, 1> q_virtual_ddot_;
-    Eigen::Vector12d q_ext_;
+    Eigen::Vector20d q_ext_;
 
     bool extencoder_init_flag_;
 
@@ -125,7 +126,7 @@ private:
 
     Eigen::Isometry3d current_transform_[2];
 
-    Eigen::Matrix<double, 6, 4> leg_jacobian_[2];
+    Eigen::Matrix<double, 6, 5> leg_jacobian_[2];
     Eigen::Matrix<double, 6, MODEL_WITH_VIRTUAL_DOF> leg_with_vlink_jacobian_[2];
 
     Eigen::Matrix<double, MODEL_WITH_VIRTUAL_DOF, MODEL_WITH_VIRTUAL_DOF> full_inertia_mat_;
@@ -153,7 +154,7 @@ private:
     Eigen::Vector6d q_virtual_1;
     Eigen::Vector6d q_dot_virtual_1;
 
-    Eigen::Matrix28d A_;
+    Eigen::MatrixXd A_;
     Eigen::MatrixXd A_temp_;
 
 };

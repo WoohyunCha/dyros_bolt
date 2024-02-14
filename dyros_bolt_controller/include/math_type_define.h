@@ -26,10 +26,13 @@ typedef double	rScalar;
 
 EIGEN_MAKE_TYPEDEFS(rScalar, d, 5, 5)
 EIGEN_MAKE_TYPEDEFS(rScalar, d, 6, 6)
+EIGEN_MAKE_TYPEDEFS(rScalar, d, 10, 10)
 EIGEN_MAKE_TYPEDEFS(rScalar, d, 7, 7)
 EIGEN_MAKE_TYPEDEFS(rScalar, d, 8, 8)
 EIGEN_MAKE_TYPEDEFS(rScalar, d, 12, 12)
+EIGEN_MAKE_TYPEDEFS(rScalar, d, 16, 16)
 EIGEN_MAKE_TYPEDEFS(rScalar, d, 18, 18)
+EIGEN_MAKE_TYPEDEFS(rScalar, d, 20, 20)
 EIGEN_MAKE_TYPEDEFS(rScalar, d, 28, 28)
 EIGEN_MAKE_TYPEDEFS(rScalar, d, 30, 30)
 EIGEN_MAKE_TYPEDEFS(rScalar, d, 32, 32)
