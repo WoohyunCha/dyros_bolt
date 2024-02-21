@@ -59,7 +59,7 @@ void RealRobotInterface::axisRequestStateCallback(const std_msgs::Int16::ConstPt
 void RealRobotInterface::readDevice()
 {
     ControlBase::readDevice(); // Get command from controllers and gui.
-    axisCurrentPublish(); // Axes' states are already read via CAN. Publish the states (Like closed loop, full cali, ...). Received by gui.
+    axisCurrentPublish(); // Axes' states are already read via CAN thread. Publish the states (Like closed loop, full cali, ...). Received by gui.
     
     for (int i = 0; i < odrv.axis_can_ids_list.size(); i++)
     {
@@ -71,6 +71,8 @@ void RealRobotInterface::readDevice()
     }
 
     //TODO : Receive IMU data via ROS topic
+    // virtual_q_dot_ = IMUreading;
+    // base_quat_ = IMU_to_quat(IMUreading);
 }
 
 void RealRobotInterface::update()

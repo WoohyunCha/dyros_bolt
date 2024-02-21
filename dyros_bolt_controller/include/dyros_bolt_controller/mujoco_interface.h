@@ -10,6 +10,20 @@
 #include <mujoco_ros_msgs/SensorState.h>
 #include <mujoco_ros_msgs/JointSet.h>
 
+
+//////////////////////HELPER//////////////////////
+Eigen::Quaterniond rpyToQuaternion(double roll, double pitch, double yaw) {
+    // Convert roll, pitch, yaw angles to quaternion representation
+    Eigen::AngleAxisd rollAngle(roll, Eigen::Vector3d::UnitX());
+    Eigen::AngleAxisd pitchAngle(pitch, Eigen::Vector3d::UnitY());
+    Eigen::AngleAxisd yawAngle(yaw, Eigen::Vector3d::UnitZ());
+
+    Eigen::Quaterniond quaternion = yawAngle * pitchAngle * rollAngle;
+    // Eigen::Quaterniond quaternion = rollAngle * pitchAngle * yawAngle;
+
+    return quaternion;
+}
+
 namespace dyros_bolt_controller {
 
 class mujoco_interface : public ControlBase{

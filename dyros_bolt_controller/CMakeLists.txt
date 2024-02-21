@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-list(APPEND CMAKE_PREFIX_PATH "~/bolt_ws/libtorch/")
+list(APPEND CMAKE_PREFIX_PATH "~/libtorch/")
 
 project(dyros_bolt_controller)
 
@@ -188,7 +188,7 @@ target_link_libraries(dyros_bolt_controller_lib
   ${TORCH_LIBRARIES}
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
-
+  stdc++fs # For filesystems
     -L/usr/local/lib
     -lrbdl
     -lrbdl_urdfreader

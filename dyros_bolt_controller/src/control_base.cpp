@@ -35,6 +35,7 @@ ControlBase::ControlBase(ros::NodeHandle &nh, double Hz) :
   nh.getParam("dof_vel_scale", rl_controller_.dof_vel_scale);
   nh.getParam("clip_observations", rl_controller_.clip_observations);
   nh.getParam("clip_actions", rl_controller_.clip_actions);
+  nh.getParam("action_scale", rl_controller_.action_scale);
 
   for (int i=0; i< DyrosBoltModel::HW_TOTAL_DOF; i++)
   {
@@ -50,6 +51,8 @@ ControlBase::ControlBase(ros::NodeHandle &nh, double Hz) :
   shutdown_command_sub_ = nh.subscribe("/dyros_bolt/shutdown_command", 1, &ControlBase::shutdownCommandCallback,this);
   parameterInitialize();
   model_.test();
+
+  // rl_controller_.setEnable(true);
 }
 
 void ControlBase::makeIDInverseList()
@@ -63,10 +66,8 @@ void ControlBase::makeIDInverseList()
 
 void ControlBase::parameterInitialize()
 {
-  q_.setZero();
-  // q_ << 0, 0, 0.43, 0, 0, 0,
-  //       0, 0.436332313, -0.872664626, 0.436332313,
-  //       0, 0.436332313, -0.872664626, 0.436332313, 1;
+  //q_.setZero();
+  q_ << 0., -0.1, -0.15, 0.4, -0.25, 0., 0.1, -0.15, 0.4, -0.25;
   q_dot_.setZero();
   q_dot_filtered_.setZero();
   torque_.setZero();
@@ -124,21 +125,18 @@ void ControlBase::update()
 void ControlBase::compute()
 {
 
-  joint_controller_.compute();
-  joint_controller_.updateControlMask(control_mask_);
-  joint_controller_.writeDesired(control_mask_, desired_q_);
-
-  // rl_controller_.compute();
+  // joint_controller_.compute();
+  // joint_controller_.updateControlMask(control_mask_);
+  // joint_controller_.writeDesired(control_mask_, desired_q_);
+  rl_controller_.compute();
   rl_controller_.updateControlMask(control_mask_);
   rl_controller_.writeDesired(control_mask_, desired_torque_);
-
   // Torque Control
-  for (int i = 0; i < DyrosBoltModel::MODEL_DOF; i++)
-  {
-    desired_torque_[i] = pos_kp[i] * (desired_q_[i] - q_[i]) + pos_kv[i] * (q_dot_filtered_[i]);
-    // desired_torque_[i] = 0.;
-  }
-
+  // for (int i = 0; i < DyrosBoltModel::MODEL_DOF; i++)
+  // {
+  //   // desired_torque_[i] = pos_kp[i] * (desired_q_[i] - q_[i]) + pos_kv[i] * (q_dot_filtered_[i]);
+  //   desired_torque_[i] = 0.;
+  // }
   // Eigen::Vector8d gvec = g_.segment<8>(6);
 
   // Eigen::Vector6d EE_force;
@@ -157,7 +155,7 @@ void ControlBase::compute()
   // desired_torque_ << gvec.segment<4>(0) + leftlegcomp, gvec.segment<4>(4) + rightlegcomp;
   // cout << "g vector : " << gvec.transpose() << endl;
 
-  // cout << "calculated torque : " << desired_torque_.transpose() << endl;
+  std::cout << "calculated torque : " << desired_torque_.transpose() << std::endl;
 
   tick_ ++;
   control_time_ = tick_ / Hz_;
@@ -257,10 +255,13 @@ void ControlBase::rlCommandCallback(const dyros_bolt_msgs::RLCommandConstPtr &ms
   if(msg->rl_mode == dyros_bolt_msgs::RLCommand::MOVE)
   {
     rl_controller_.setEnable(true);
+    rl_controller_.setCommands(msg->commands[0], msg->commands[1], msg->commands[2]);
+    //TODO : Take heading as command
   }
   else
   {
     rl_controller_.setEnable(false);
+    rl_controller_.setCommands(0., 0., 0.);
   }
 }
 

@@ -74,6 +74,9 @@ void mujoco_interface::jointStateCallback(const sensor_msgs::JointStateConstPtr 
     }
     mujoco_init_receive = true;
   }
+
+  base_quat_ = rpyToQuaternion(virtual_q_(3), virtual_q_(4), virtual_q_(5));
+
 }
 
 void mujoco_interface::sensorStateCallback(const mujoco_ros_msgs::SensorStateConstPtr &msg)
@@ -209,7 +212,6 @@ void mujoco_interface::writeDevice()
         // mujoco_joint_set_msg_.torque[i] = model_.command_Torque(i);
         mujoco_joint_set_msg_.torque[i] = desired_torque_(i);
         // mujoco_joint_set_msg_.torque[i] = 0;
-        // std::cout << "desired torq: " <<desired_torque_(i) << std::endl;
       }
       mujoco_joint_set_msg_.header.stamp = ros::Time::now();
       mujoco_joint_set_msg_.time = mujoco_sim_time;

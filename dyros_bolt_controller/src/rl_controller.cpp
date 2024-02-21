@@ -8,6 +8,11 @@ namespace dyros_bolt_controller
 void RLController::setEnable(bool enable)
 {
     this->rl_enable_ = enable;
+    
+}
+
+void RLController::setCommands(double lin_vel_x, double lin_vel_y, double heading){
+    commands = Vector3d(lin_vel_x,  lin_vel_y, heading);
 }
 
 void RLController::compute()
@@ -15,16 +20,21 @@ void RLController::compute()
     if(this->rl_enable_)
     {
         observationAllocation(current_q_, current_q_dot_, virtual_q_dot_, base_quat_);
-        this->action = torch::clamp(module.forward({this->observation}).toTensor(), -clip_actions, clip_actions) ;
-        this->action = this->action.to(torch::kDouble);
+        this->action = torch::clamp(module.forward({queue_to_tensor(this->observation_history)}).toTensor(), -clip_actions, clip_actions) ;
+        this->action = this->action.to(torch::kDouble) ;
         Eigen::Map<Eigen::VectorXd> desired_torque_(this->action.data<double>(), this->action.numel());
-        for(int i=0; i<total_dof_/2; i++)
-        {
-            this->desired_torque_[i] = desired_torque_[i];
-            this->desired_torque_[i+total_dof_/2] = desired_torque_[i+total_dof_/2];
-        }
-        // this->desired_torque_ = desired_torque_;
+        // for(int i=0; i<total_dof_/2; i++)
+        // {
+        //     this->desired_torque_[i] = desired_torque_[i];
+        //     this->desired_torque_[i+total_dof_/2] = desired_torque_[i+total_dof_/2];
+        // }
+        //TODO: Check if desired torque is computed the same in isaacgym when obsv is 0. DONE
+        //TODO: Check frequency!!! DONE
+        this->desired_torque_ = desired_torque_ * action_scale ;
+        // this->desired_torque_[1] = 10.;
+        writeDebug(this->file);
     }
+    this->setEnable(true);
 }
 
 void RLController::observationAllocation(VectorQd current_q, VectorQd current_q_dot, Vector6d virtual_q_dot, Eigen::Quaterniond base_quat)
@@ -41,25 +51,14 @@ void RLController::observationAllocation(VectorQd current_q, VectorQd current_q_
     */
 
     // Vector3d base_lin_vel_ = virtual_q_dot.head(3)*2.0;
-    Vector3d base_ang_vel_ = virtual_q_dot.tail(3)*ang_vel_scale;
-    Vector3d projected_gravity_ = quat_rotate_inverse(base_quat, this->gravity);
-    Vector3d commands_ = Vector3d(0.8 * lin_vel_scale, 0 * lin_vel_scale, 0 * ang_vel_scale);
 
-    // Vector6d dof_pos_ = current_q;
-    // Vector6d dof_vel_ = current_q_dot*0.05;
-    Vector10d dof_pos_;
-    Vector10d dof_vel_;
-    Vector10d action_;
-
-    for(int i=0; i<total_dof_/2; i++)
-    {
-        dof_pos_[i] = (current_q[i]-init_q_[i]) * dof_pos_scale;
-        dof_pos_[i+total_dof_/2] = (current_q[i+total_dof_/2]-init_q_[i+total_dof_/2]) * dof_pos_scale;
-        dof_vel_[i] = current_q_dot[i]*dof_vel_scale;
-        dof_vel_[i+total_dof_/2] = current_q_dot[i+total_dof_/2]*dof_vel_scale;
-        action_[i] = this->desired_torque_[i];
-        action_[i+total_dof_/2] = this->desired_torque_[i+total_dof_/2];
-    }
+    // Vectors used with pytorch should be in float
+    Vector3f base_ang_vel_ = (virtual_q_dot.tail(3)*ang_vel_scale).cast<float>();
+    Vector3f projected_gravity_ = quat_rotate_inverse(base_quat, this->gravity ).cast<float>();
+    Vector3f commands_ = (commands.array() * Vector3d(lin_vel_scale, lin_vel_scale, ang_vel_scale).array()).cast<float>();
+    Vector10f dof_pos_ = ((current_q-init_q_) * dof_pos_scale).cast<float>(); 
+    Vector10f dof_vel_ = (current_q_dot * dof_vel_scale).cast<float>();
+    Vector10f action_ = (this->desired_torque_).cast<float>();
 
     // torch::Tensor base_lin_vel = torch::from_blob(base_lin_vel_.data(), {1, 3});
     torch::Tensor base_ang_vel = torch::from_blob(base_ang_vel_.data(), {1, 3});
@@ -68,13 +67,14 @@ void RLController::observationAllocation(VectorQd current_q, VectorQd current_q_
     torch::Tensor dof_pos = torch::from_blob(dof_pos_.data(), {1, total_dof_});
     torch::Tensor dof_vel = torch::from_blob(dof_vel_.data(), {1, total_dof_});
     torch::Tensor action = torch::from_blob(action_.data(), {1, total_dof_});
-
     std::vector<torch::Tensor> tensor_list = {base_ang_vel, projected_gravity, commands, dof_pos, dof_vel, action};
     
     // this->observation = torch::zeros({1, this->observation_size});
     this->observation = torch::clamp(torch::cat(tensor_list, 1), -clip_observations, clip_observations) ;
     std::cout << "observation: " << this->observation << std::endl;
     std::cout << "observation: " << this->observation.sizes() << std::endl;
+    observation_history.push(observation);
+    // observation_history.push(torch::ones({1, observation_size}, torch::kFloat)* (-1.));
 }
 
 void RLController::updateControlMask(unsigned int *mask)
@@ -121,4 +121,27 @@ Eigen::Vector3d RLController::quat_rotate_inverse(const Eigen::Quaterniond& q, c
 
     return a - b + c;
 }
+
+void RLController::writeDebug(std::ofstream& file){
+
+    if (file.is_open()) {
+        // Write some data to the file
+        auto tmp_tensor = queue_to_tensor(this->observation_history).flatten();
+        auto tmp = tmp_tensor.accessor<float, 1>();
+        file << "Obs : \n";
+        for (int i = 0; i < tmp.size(0); ++i) {
+            file << tmp[i] << " ";
+        }        
+        file << "\n";
+        file << "Torque : \n";
+        file << this->desired_torque_.transpose() << "\n";
+
+        // Close the file
+
+        std::cout << "Data successfully written to file: " << dir << std::endl;
+    } else {
+        std::cerr << "Error: Unable to open file: " << dir << std::endl;
+    }
 }
+}
+

@@ -37,6 +37,19 @@ EIGEN_MAKE_TYPEDEFS(rScalar, d, 28, 28)
 EIGEN_MAKE_TYPEDEFS(rScalar, d, 30, 30)
 EIGEN_MAKE_TYPEDEFS(rScalar, d, 32, 32)
 
+EIGEN_MAKE_TYPEDEFS(float, f, 5, 5)
+EIGEN_MAKE_TYPEDEFS(float, f, 6, 6)
+EIGEN_MAKE_TYPEDEFS(float, f, 10, 10)
+EIGEN_MAKE_TYPEDEFS(float, f, 7, 7)
+EIGEN_MAKE_TYPEDEFS(float, f, 8, 8)
+EIGEN_MAKE_TYPEDEFS(float, f, 12, 12)
+EIGEN_MAKE_TYPEDEFS(float, f, 16, 16)
+EIGEN_MAKE_TYPEDEFS(float, f, 18, 18)
+EIGEN_MAKE_TYPEDEFS(float, f, 20, 20)
+EIGEN_MAKE_TYPEDEFS(float, f, 28, 28)
+EIGEN_MAKE_TYPEDEFS(float, f, 30, 30)
+EIGEN_MAKE_TYPEDEFS(float, f, 32, 32)
+
 // typedef Transform<rScalar, 3, Eigen::Isometry> HTransform;  // typedef Transform< double, 3, Isometry > 	Eigen::Isometry3d
 
 typedef Matrix<rScalar, 1, 3>	Matrix1x3d;

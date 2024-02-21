@@ -2,17 +2,17 @@
     <include file="simulation_scene.xml"/>
 
     <asset>
-        <mesh name="bolt_link" file="bolt_link.stl" />
+        <mesh name="base_link" file="base_link.stl" />
         <mesh name="L_HipRoll_Link" file="L_HipRoll_Link.stl" />
         <mesh name="L_HipPitch_Link" file="L_HipPitch_Link.stl" />
         <mesh name="L_Upper_Leg" file="L_Upper_Leg.stl" />
         <mesh name="L_Lower_Leg" file="L_Lower_Leg.stl" />
-        <mesh name="L_Foot" file="L_Foot.stl" />
+        <mesh name="L_Foot" file="L_Foot_box.stl" />
         <mesh name="R_HipRoll_Link" file="R_HipRoll_Link.stl" />
         <mesh name="R_HipPitch_Link" file="R_HipPitch_Link.stl" />
         <mesh name="R_Upper_Leg" file="R_Upper_Leg.stl" />
         <mesh name="R_Lower_Leg" file="R_Lower_Leg.stl" />
-        <mesh name="R_Foot" file="R_Foot.stl" />
+        <mesh name="R_Foot" file="R_Foot_box.stl" />
 
         <texture type="skybox" builtin="gradient" width="128" height="128" rgb1="0.4 0.6 0.8" rgb2="0 0 0"/>
         <texture name="texgeom" type="cube" builtin="flat" mark="cross" width="128" height="128" rgb1="0.6 0.6 0.6" rgb2="0.6 0.6 0.6" markrgb="1 1 1"/>
@@ -27,47 +27,57 @@
         <light directional="true" diffuse=".8 .8 .8" pos="0 0 10" dir="0 0 -10"/>
         <light directional="true" diffuse=".5 .5 .5" pos="10 0 0" dir="-10 0 0"/>
 
-        <body name="base_link" pos="0 0 0">
-            <inertial pos="0.004 0 -0.002" quat="0 0.707107 0 0.707107" mass="0.614369" diaginertia="0.0247612 0.0193811 0.00578574" />
-            <joint name="virtual" type="free" />
-            <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="bolt_body" />
-            <site name="Pelvis_IMU" type="cylinder" size="0.005 0.005" group="4" rgba=".1 .1 .9 1"/>
-            <body name="FL_SHOULDER" pos="0 0.0636 0">
-                <inertial pos="0.0170826 -0.00446892 -0.0109583" quat="0.380445 0.573263 0.68117 0.250275" mass="0.140043" diaginertia="0.000140999 0.000103321 5.85997e-05" />
-                <joint name="FL_HAA" pos="0 0 0" axis="1 0 0" limited="true" range="-10 10" />
-                <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="bolt_hip_fe_left_side" />
-                <body name="FL_UPPER_LEG" pos="0 0.0145 -0.0386">
-                    <inertial pos="1.377e-05 0.0193585 -0.118707" quat="0.705243 -0.0424536 0.0423607 0.706424" mass="0.148538" diaginertia="0.000417563 0.00041107 2.46069e-05" />
-                    <joint name="FL_HFE" pos="0 0 0" axis="0 1 0" limited="true" range="-10 10" />
-                    <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="upper_leg_200mm_left_side" />
-                    <body name="FL_LOWER_LEG" pos="0 0.0374 -0.2">
-                        <inertial pos="0 0.00836718 -0.115919" quat="0.707082 -0.00592354 0.00592354 0.707082" mass="0.0311724" diaginertia="0.000115592 0.00011487 2.16816e-06" />
-                        <joint name="FL_KFE" pos="0 0 0" axis="0 1 0" limited="true" range="-10 10" />
-                        <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="lower_leg_200mm_left_side" />
-                        <body name="FL_FOOT" pos="0 0.008 -0.2">
-                            <inertial pos="0 0 0.00035767" quat="0.707107 0 0 0.707107" mass="0.001" diaginertia="8.4e-07 5.7e-07 5.3e-07" />
-                            <joint name="FL_ANKLE" pos="0 0 0" axis="0 1 0" limited="false" range="-3.14 3.14" />
-                            <geom size="0.0085 0.03" pos="0 0 -0.01" quat="0.707107 0 0.707107 0" type="cylinder" rgba="0.0 0.0 0.0 1" />
+        <body name="base_link" pos="0 0 0"> 
+            <inertial pos="0.004 0 -0.002" mass="1.055" fullinertia="0.006 0.005 0.006 0.0 0.000056 0.0" />
+            <joint name="virtual" type="free" limited='false' frictionloss="0" damping="0" stiffness="0" armature="0"/>
+            <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="base_link" />
+            <!-- <site name="Pelvis_IMU" type="cylinder" size="0.005 0.005" group="4" rgba=".1 .1 .9 1"/> -->
+            <body name="L_HipRoll_link" pos="-0.025950 0.038500 -0.022950">
+                <inertial pos="0.010189 0.010846 -0.044532" mass="0.207615" fullinertia="0.000215 0.000371 0.000321 -0.000022 -0.000037 -0.000027" />
+                <joint name="L_HipYaw_Joint" pos="0 0 0" axis="0 0 1" limited="true" range="-0.43 1.57" />
+                <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_HipRoll_Link" />
+                <body name="L_HipPitch_Link" pos="0.012950 0.040093 -0.031500">
+                    <inertial pos="0.039527 -0.002981 -0.010338" mass="0.163597" fullinertia="0.000081 0.000173 0.000120 -0.000001 -0.000023 0.000010" />
+                    <joint name="L_HipRoll_Joint" pos="0 0 0" axis="1 0 0" limited="true" range="-0.73 1.57" />
+                    <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_HipPitch_Link" />
+                    <body name="L_Upper_Leg" pos="0.021501 0.012950 -0.040093">
+                        <inertial pos="-0.001005 0.020913 -0.110191" mass="0.181003" fullinertia="0.000627 0.000634 0.000039 0.000001 0.000001 0.000044" />
+                        <joint name="L_HipPitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="-1.57 1.57" />
+                        <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_Upper_Leg" />
+                        <body name="L_Lower_Leg" pos="0.0 0.037450 -0.2">
+                            <inertial pos="0.00001 0.017233 -0.110058" mass="0.174200" fullinertia="0.000576 0.000578 0.000034 0.0 0.0 -0.000009" />
+                            <joint name="L_KneePitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="0 3.14" />
+                            <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_Lower_Leg"/>
+                            <body name="L_Foot" pos="0 0.014375 -0.2">
+                                <inertial pos="0.012950 0.001457 -0.019037" mass="0.034753" fullinertia="0.000011 0.000026 0.000018 -0.000001 0.000006 0.000001" />
+                                <joint name="L_AnklePitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="-1.5 1.5" />
+                                <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_Foot"/>
+                            </body>
                         </body>
                     </body>
                 </body>
             </body>
-            <body name="FR_SHOULDER" pos="0 -0.0636 0">
-                <inertial pos="0.0170823 0.00447099 -0.0109585" quat="0.250376 0.681095 0.573344 0.380393" mass="0.140044" diaginertia="0.000141003 0.000103316 5.8591e-05" />
-                <joint name="FR_HAA" pos="0 0 0" axis="1 0 0" limited="true" range="-10 10" />
-                <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="bolt_hip_fe_right_side" />
-                <body name="FR_UPPER_LEG" pos="0 -0.0145 -0.0386">
-                    <inertial pos="-1.377e-05 -0.0193585 -0.118707" quat="0.705243 0.0424536 -0.0423607 0.706424" mass="0.148538" diaginertia="0.000417563 0.00041107 2.46069e-05" />
-                    <joint name="FR_HFE" pos="0 0 0" axis="0 1 0" limited="true" range="-10 10" />
-                    <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="upper_leg_200mm_right_side" />
-                    <body name="FR_LOWER_LEG" pos="0 -0.0374 -0.2">
-                        <inertial pos="0 -0.00836718 -0.115919" quat="0.707082 0.00592354 -0.00592354 0.707082" mass="0.0311724" diaginertia="0.000115592 0.00011487 2.16816e-06" />
-                        <joint name="FR_KFE" pos="0 0 0" axis="0 1 0" limited="true" range="-10 10" />
-                        <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="lower_leg_200mm_right_side" />
-                        <body name="FR_FOOT" pos="0 -0.008 -0.2">
-                            <inertial pos="0 0 0.00035767" quat="0.707107 0 0 0.707107" mass="0.001" diaginertia="8.4e-07 5.7e-07 5.3e-07" />
-                            <joint name="FR_ANKLE" pos="0 0 0" axis="0 1 0" limited="false" range="-3.14 3.14" />
-                            <geom size="0.0085 0.03" pos="0 0 -0.01" quat="0.707107 0 0.707107 0" type="cylinder" rgba="0.0 0.0 0.0 1" />
+            <body name="R_HipRoll_link" pos="-0.025950 -0.038500 -0.022950">
+                <inertial pos="0.010189 -0.010846 -0.044532" mass="0.207615" fullinertia="0.000215 0.000371 0.000321 0.000022 -0.000037 0.000027" />
+                <joint name="R_HipYaw_Joint" pos="0 0 0" axis="0 0 1" limited="true" range="-1.57 0.43" />
+                <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_HipRoll_Link" />
+                <body name="R_HipPitch_Link" pos="0.012950 -0.040093 -0.031500">
+                    <inertial pos="0.039527 0.002981 -0.010338" mass="0.163597" fullinertia="0.000081 0.000173 0.000120 0.000001 -0.000023 -0.000010" />
+                    <joint name="R_HipRoll_Joint" pos="0 0 0" axis="1 0 0" limited="true" range="-1.57 0.73" />
+                    <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_HipPitch_Link" />
+                    <body name="R_Upper_Leg" pos="0.021501 -0.012950 -0.040093">
+                        <inertial pos="-0.001005 -0.020913 -0.110191" mass="0.181003" fullinertia="0.000627 0.000634 0.000039 -0.000001 0.000001 -0.000044" />
+                        <joint name="R_HipPitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="-1.57 1.57" />
+                        <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_Upper_Leg" />
+                        <body name="R_Lower_Leg" pos="0.0 -0.037450 -0.2">
+                            <inertial pos="0.00001 -0.017233 -0.110058" mass="0.174200" fullinertia="0.000576 0.000578 0.000034 -0.0 0.0 0.000009" />
+                            <joint name="R_KneePitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="0 3.14" />
+                            <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_Lower_Leg"/>
+                            <body name="R_Foot" pos="0 -0.014375 -0.2">
+                                <inertial pos="0.012950 -0.001457 -0.019037" mass="0.034753" fullinertia="0.000011 0.000026 0.000018 0.000001 0.000006 -0.000001" />
+                                <joint name="R_AnklePitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="-1.5 1.5" />
+                                <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_Foot"/>
+                            </body>
                         </body>
                     </body>
                 </body>
@@ -76,25 +86,18 @@
     </worldbody>
 
     <actuator>
-        <motor name="FL_HAA" joint="FL_HAA" /> 
-		<motor name="FL_HFE" joint="FL_HFE" /> 
-		<motor name="FL_KFE" joint="FL_KFE" /> 
-		<motor name="FL_ANKLE" joint="FL_ANKLE" /> 
-        <motor name="FR_HAA" joint="FR_HAA" /> 
-		<motor name="FR_HFE" joint="FR_HFE" /> 
-		<motor name="FR_KFE" joint="FR_KFE" /> 
-		<!-- <position class="position" ctrllimited="true" ctrlrange="-3 3" name="FL_HAA" joint="FL_HAA" kp = "100"/>  -->
-		<!-- <position class="position" ctrllimited="true" ctrlrange="-3 3" name="FL_HFE" joint="FL_HFE" kp = "100"/>  -->
-		<!-- <position class="position" ctrllimited="true" ctrlrange="-3 3" name="FL_KFE" joint="FL_KFE" kp = "100"/>  -->
-		<!-- <position class="position" ctrllimited="true" ctrlrange="-3 3" name="FL_ANKLE" joint="FL_ANKLE" kp = "10"/>  -->
-
-		<!-- <position class="position" ctrllimited="true" ctrlrange="-3 3" name="FR_HAA" joint="FR_HAA" kp = "100"/>  -->
-		<!-- <position class="position" ctrllimited="true" ctrlrange="-3 3" name="FR_HFE" joint="FR_HFE" kp = "100"/>  -->
-		<!-- <position class="position" ctrllimited="true" ctrlrange="-3 3" name="FR_KFE" joint="FR_KFE" kp = "100"/>  -->
-		<!-- <position class="position" ctrllimited="true" ctrlrange="-3 3" name="FR_ANKLE" joint="FR_ANKLE" kp = "10"/>  -->
-		<motor name="FR_ANKLE" joint="FR_ANKLE" /> 
+        <motor name="L_HipYaw" joint="L_HipYaw_Joint" /> 
+		<motor name="L_HipRoll" joint="L_HipRoll_Joint" /> 
+		<motor name="L_HipPitch" joint="L_HipPitch_Joint" /> 
+		<motor name="L_KneePitch" joint="L_KneePitch_Joint" /> 
+		<motor name="L_AnklePitch" joint="L_AnklePitch_Joint" /> 
+        <motor name="R_HipYaw" joint="R_HipYaw_Joint" /> 
+		<motor name="R_HipRoll" joint="R_HipRoll_Joint" /> 
+		<motor name="R_HipPitch" joint="R_HipPitch_Joint" /> 
+		<motor name="R_KneePitch" joint="R_KneePitch_Joint" /> 
+		<motor name="R_AnklePitch" joint="R_AnklePitch_Joint" /> 
     </actuator>  
-
+<!-- 
     <sensor>
         <accelerometer name="Acc_Pelvis_IMU" site="Pelvis_IMU"/>
         <gyro name="Gyro_Pelvis_IMU" site="Pelvis_IMU"/>
@@ -103,12 +106,13 @@
         <framequat name="Pelvis_quat" objtype="site" objname="Pelvis_IMU"/>
         <framelinvel name="Pelvis_linear_vel" objtype="site" objname="Pelvis_IMU"/>
 		<frameangvel name="Pelvis_angular_vel" objtype="site" objname="Pelvis_IMU"/>  
-    </sensor>
+    </sensor> -->
 
     <keyframe>
-        <key name="front" time="0" qpos="0 0 0.43 1 0 0 0
-                                        0 0.436332313 -0.872664626 0.436332313
-                                        0 0.436332313 -0.872664626 0.436332313"/>
+    <!-- qpos is composed of virtual pos(3), something(1), rpy(3), dofpos...-->
+        <key name="front" time="0" qpos="0 0 0.55 1 0 0 0 
+                                        0. -0.1 -0.15 0.4 -0.25
+                                        0. 0.1 -0.15 0.4 -0.25"/>
     </keyframe>
 </mujoco>
 <!-- 0 0 0 -0.785398163 0 0 0 -0.785398163"/> -->

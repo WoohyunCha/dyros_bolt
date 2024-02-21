@@ -1,13 +1,13 @@
-
-lin_vel : 1.0
-ang_vel : 0.25
-dof_pos : 1.0
-dof_vel : 0.05
-height_measurements : 5.0
-ext_forces : .1
-ext_torques : 1.
-friction_coeffs : 1.
-dof_friction : 10.
-dof_damping : 10.
-clip_observations : 100.
-clip_actions : 44.
+lin_vel_scale : 1.0
+ang_vel_scale : 0.25
+dof_pos_scale : 1.0
+dof_vel_scale : 0.05
+height_measurements_scale : 5.0
+ext_forces_scale : 0.1
+ext_torques_scale : 1.
+friction_coeffs_scale : 1.
+dof_friction_scale : 10.
+dof_damping_scale : 10.
+clip_observations : 10.
+clip_actions : 10.
+action_scale : 1.0

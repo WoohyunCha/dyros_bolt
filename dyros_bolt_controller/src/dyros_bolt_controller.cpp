@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     
 
     double Hz;
-    nh.param<double>("control_frequency", Hz, 150.0); // set 150hz as default 
+    nh.param<double>("control_frequency", Hz, 100.0); // set 150hz as default 
 
     if(mode == "simulation")
     {
@@ -55,7 +55,6 @@ int main(int argc, char **argv)
         ctr_obj->reflect(); // ros publish the values read from CAN
         ctr_obj->writeDevice();
         ctr_obj->wait();
-
         if(ctr_obj->isShuttingDown())
         {
           break;
