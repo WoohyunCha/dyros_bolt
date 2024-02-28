@@ -36,7 +36,6 @@ public:
         while (observation_history.size() < history_length){
             observation_history.push(torch::zeros({1, observation_size} , torch::kFloat));
         }
-
         // observationAllocation(current_q_, current_q_dot_, virtual_q_dot_, base_quat_);
         // observation_history.push(observation);
         // action = torch::clamp(module.forward({queue_to_tensor(observation_history)}).toTensor(), -clip_actions, clip_actions) ;
@@ -77,7 +76,7 @@ private:
     const VectorQd& current_q_dot_;
     const Vector6d& virtual_q_dot_;
     const Eigen::Quaterniond& base_quat_;
-    Vector3d gravity = Vector3d(0, 0, -9.81).normalized();
+    Vector3d gravity = Vector3d(0, 0, -GRAVITY).normalized();
 
     torch::jit::script::Module module;
 

@@ -1,5 +1,7 @@
 #include "dyros_bolt_controller/control_base.h"
 
+
+
 namespace dyros_bolt_controller
 {
 
@@ -7,7 +9,7 @@ ControlBase::ControlBase(ros::NodeHandle &nh, double Hz) :
   is_first_boot_(true), Hz_(Hz), control_mask_{}, total_dof_(DyrosBoltModel::HW_TOTAL_DOF),shutdown_flag_(false),
   joint_controller_(q_, q_dot_filtered_, control_time_),
   jumping_controller_(model_, q_, q_dot_filtered_, Hz, control_time_),
-  rl_controller_(q_, q_dot_filtered_, virtual_q_dot_, base_quat_,  Hz, control_time_),
+  rl_controller_(q_, q_dot_filtered_, virtual_q_dot_, base_quat_direct_,  Hz, control_time_),
   joint_control_as_(nh, "/dyros_bolt/joint_control", false) // Probably a GUI is the client?
 {
   makeIDInverseList();
@@ -155,7 +157,7 @@ void ControlBase::compute()
   // desired_torque_ << gvec.segment<4>(0) + leftlegcomp, gvec.segment<4>(4) + rightlegcomp;
   // cout << "g vector : " << gvec.transpose() << endl;
 
-  std::cout << "calculated torque : " << desired_torque_.transpose() << std::endl;
+  // std::cout << "calculated torque : " << desired_torque_.transpose() << std::endl;
 
   tick_ ++;
   control_time_ = tick_ / Hz_;

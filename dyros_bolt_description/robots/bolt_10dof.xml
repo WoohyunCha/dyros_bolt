@@ -35,19 +35,19 @@
             <body name="L_HipRoll_link" pos="-0.025950 0.038500 -0.022950">
                 <inertial pos="0.010189 0.010846 -0.044532" mass="0.207615" fullinertia="0.000215 0.000371 0.000321 -0.000022 -0.000037 -0.000027" />
                 <joint name="L_HipYaw_Joint" pos="0 0 0" axis="0 0 1" limited="true" range="-0.43 1.57" />
-                <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_HipRoll_Link" />
+                <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_HipRoll_Link" contype="0" conaffinity="0"/>
                 <body name="L_HipPitch_Link" pos="0.012950 0.040093 -0.031500">
                     <inertial pos="0.039527 -0.002981 -0.010338" mass="0.163597" fullinertia="0.000081 0.000173 0.000120 -0.000001 -0.000023 0.000010" />
                     <joint name="L_HipRoll_Joint" pos="0 0 0" axis="1 0 0" limited="true" range="-0.73 1.57" />
-                    <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_HipPitch_Link" />
+                    <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_HipPitch_Link" contype="0" conaffinity="0"/>
                     <body name="L_Upper_Leg" pos="0.021501 0.012950 -0.040093">
                         <inertial pos="-0.001005 0.020913 -0.110191" mass="0.181003" fullinertia="0.000627 0.000634 0.000039 0.000001 0.000001 0.000044" />
                         <joint name="L_HipPitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="-1.57 1.57" />
-                        <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_Upper_Leg" />
+                        <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_Upper_Leg" contype="0" conaffinity="0" />
                         <body name="L_Lower_Leg" pos="0.0 0.037450 -0.2">
                             <inertial pos="0.00001 0.017233 -0.110058" mass="0.174200" fullinertia="0.000576 0.000578 0.000034 0.0 0.0 -0.000009" />
                             <joint name="L_KneePitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="0 3.14" />
-                            <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_Lower_Leg"/>
+                            <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="L_Lower_Leg" contype="0" conaffinity="0" />
                             <body name="L_Foot" pos="0 0.014375 -0.2">
                                 <inertial pos="0.012950 0.001457 -0.019037" mass="0.034753" fullinertia="0.000011 0.000026 0.000018 -0.000001 0.000006 0.000001" />
                                 <joint name="L_AnklePitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="-1.5 1.5" />
@@ -60,19 +60,19 @@
             <body name="R_HipRoll_link" pos="-0.025950 -0.038500 -0.022950">
                 <inertial pos="0.010189 -0.010846 -0.044532" mass="0.207615" fullinertia="0.000215 0.000371 0.000321 0.000022 -0.000037 0.000027" />
                 <joint name="R_HipYaw_Joint" pos="0 0 0" axis="0 0 1" limited="true" range="-1.57 0.43" />
-                <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_HipRoll_Link" />
+                <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_HipRoll_Link" contype="0" conaffinity="0"/>
                 <body name="R_HipPitch_Link" pos="0.012950 -0.040093 -0.031500">
                     <inertial pos="0.039527 0.002981 -0.010338" mass="0.163597" fullinertia="0.000081 0.000173 0.000120 0.000001 -0.000023 -0.000010" />
                     <joint name="R_HipRoll_Joint" pos="0 0 0" axis="1 0 0" limited="true" range="-1.57 0.73" />
-                    <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_HipPitch_Link" />
+                    <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_HipPitch_Link" contype="0" conaffinity="0"/>
                     <body name="R_Upper_Leg" pos="0.021501 -0.012950 -0.040093">
                         <inertial pos="-0.001005 -0.020913 -0.110191" mass="0.181003" fullinertia="0.000627 0.000634 0.000039 -0.000001 0.000001 -0.000044" />
                         <joint name="R_HipPitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="-1.57 1.57" />
-                        <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_Upper_Leg" />
+                        <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_Upper_Leg" contype="0" conaffinity="0"/>
                         <body name="R_Lower_Leg" pos="0.0 -0.037450 -0.2">
                             <inertial pos="0.00001 -0.017233 -0.110058" mass="0.174200" fullinertia="0.000576 0.000578 0.000034 -0.0 0.0 0.000009" />
                             <joint name="R_KneePitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="0 3.14" />
-                            <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_Lower_Leg"/>
+                            <geom type="mesh" rgba="0.0 0.0 0.0 1" mesh="R_Lower_Leg" contype="0" conaffinity="0"/>
                             <body name="R_Foot" pos="0 -0.014375 -0.2">
                                 <inertial pos="0.012950 -0.001457 -0.019037" mass="0.034753" fullinertia="0.000011 0.000026 0.000018 0.000001 0.000006 -0.000001" />
                                 <joint name="R_AnklePitch_Joint" pos="0 0 0" axis="0 1 0" limited="true" range="-1.5 1.5" />
@@ -113,6 +113,7 @@
         <key name="front" time="0" qpos="0 0 0.55 1 0 0 0 
                                         0. -0.1 -0.15 0.4 -0.25
                                         0. 0.1 -0.15 0.4 -0.25"/>
+                                        
     </keyframe>
 </mujoco>
 <!-- 0 0 0 -0.785398163 0 0 0 -0.785398163"/> -->

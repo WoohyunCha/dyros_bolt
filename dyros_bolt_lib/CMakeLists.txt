@@ -1,41 +1,24 @@
 cmake_minimum_required(VERSION 3.0.2)
-list(APPEND CMAKE_PREFIX_PATH "~/libtorch/")
-
-project(dyros_bolt_controller)
+project(dyros_bolt_lib)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++17 -g) # For debugging
-add_compile_options(-std=c++17 -g)
+add_compile_options(-std=c++17)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  actionlib
-  realtime_tools
+set(BOOST_ROOT "/usr")
+set(BOOST_INCLUDEDIR "/usr/include")
+set(BOOST_LIBRARYDIR "/usr/lib/x86_64-linux-gnu")
+
+find_package(catkin REQUIRED
   eigen_conversions
   roscpp
-  roslib
   dyros_bolt_msgs
-  sensor_msgs
-  geometry_msgs
-  std_msgs
-  mujoco_ros_msgs
 )
-find_package(dyros_bolt_lib COMPONENTS)
-IF(dyros_bolt_lib_FOUND)
- message(" -- shm mode enabled" )
-   ADD_DEFINITIONS(-DCOMPILE_SHAREDMEMORY)
-ENDIF()
-
-# find_package(dwbc REQUIRED)
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(Boost REQUIRED COMPONENTS system thread)
-find_package(Torch REQUIRED)
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(Boost REQUIRED COMPONENTS system filesystem)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -89,9 +72,7 @@ find_package(Torch REQUIRED)
 
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
-#   DEPENDENCIES
-#   geoometry_msgs#   sensor_msgs#   std_msgs
-# )
+#   DEPENDENCIESBoost
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -123,9 +104,9 @@ find_package(Torch REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-#  LIBRARIES dyros_bolt_controller
-  CATKIN_DEPENDS actionlib realtime_tools eigen_conversions geometry_msgs roscpp roslib sensor_msgs std_msgs  mujoco_ros_msgs
+ INCLUDE_DIRS include
+ LIBRARIES dyros_bolt_lib
+ CATKIN_DEPENDS eigen_conversions roscpp dyros_bolt_msgs
 #  DEPENDS system_lib
 )
 
@@ -137,42 +118,13 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  ${TORCH_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
+  ${BOOST_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
-  )
-
-IF(dyros_bolt_lib_FOUND)
-  include_directories(
-  ${dyros_bolt_lib_INCLUDE_DIRS}
 )
-ENDIF()
 
-file(GLOB_RECURSE HeaderFiles "include/*.h")
-add_custom_target(dyros_bolt_control_headers SOURCES ${HeaderFiles})
-file(GLOB BRIDGE_SRC
-    "src/real_robot_interface.cpp"
-    "src/mujoco_interface.cpp"
-    "src/control_base.cpp"
-    )
-file(GLOB CONTROLLER_SRC
-    "src/dyros_bolt_model.cpp"
-    "src/joint_controller.cpp"
-    "src/jumping_controller.cpp"
-    "src/rl_controller.cpp"
-    "src/odrive_socketcan.cpp"
-    )
-
-## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/dyros_bolt_controller.cpp
-# )
-
-add_library(dyros_bolt_controller_lib
-    ${BRIDGE_SRC}
-    ${CONTROLLER_SRC}
-    )
+# Declare a C++ library
+add_library(dyros_bolt_lib "src/shm_msgs.cpp")
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -182,7 +134,7 @@ add_library(dyros_bolt_controller_lib
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME} src/dyros_bolt_controller.cpp)
+# add_executable(${PROJECT_NAME}_node src/dyros_bolt_lib_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -198,31 +150,16 @@ add_executable(${PROJECT_NAME} src/dyros_bolt_controller.cpp)
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(dyros_bolt_controller_lib
-  ${TORCH_LIBRARIES}
+
+target_link_libraries(dyros_bolt_lib
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
-  stdc++fs # For filesystems
     -L/usr/local/lib
     -lrbdl
     -lrbdl_urdfreader
-  rt
+
     # -lqpOASES
 )
-target_link_libraries(dyros_bolt_controller
-  dyros_bolt_controller_lib
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-  # dwbc
-)
-
-IF(dyros_bolt_lib_FOUND)
-target_link_libraries(dyros_bolt_controller
-  dyros_bolt_lib
-)
-ENDIF()
-
-
 #############
 ## Install ##
 #############
@@ -251,12 +188,12 @@ ENDIF()
 #   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 # )
 
-## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
 #   PATTERN ".svn" EXCLUDE
-# )
+)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
@@ -264,17 +201,13 @@ ENDIF()
 #   # myfile2
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
-add_dependencies(dyros_bolt_controller_lib ${catkin_EXPORTED_TARGETS})
-add_dependencies(dyros_bolt_controller ${catkin_EXPORTED_TARGETS})
 
-
-SET(CMAKE_BUILD_TYPE Release)
 #############
 ## Testing ##
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_dyros_bolt_controller.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_dyros_bolt_lib.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

@@ -33,6 +33,7 @@ public:
   
   virtual void update() override; // update controller based on readdevice
   virtual void compute() override; // compute algorithm and update all class object
+  virtual void readDevice() override;
   virtual void writeDevice() override; // publish to actuate devices
   virtual void wait() override;
 
@@ -84,6 +85,7 @@ public:
   ros::Rate rate_;
   int dyn_hz;
 
+  double sim_time; // For WoohyunCha
 
 };
 

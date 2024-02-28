@@ -1,5 +1,6 @@
 #ifndef _CONTROL_BASE_H
 #define _CONTROL_BASE_H
+// #define COMPILE_SHAREDMEMORY
 
 // STD Library
 #include <array>
@@ -44,9 +45,13 @@
 #include "dyros_bolt_controller/jumping_controller.h"
 #include "dyros_bolt_controller/rl_controller.h"
 #include "dyros_bolt_controller/dyros_bolt_model.h"
-
-
-
+#ifdef COMPILE_SHAREDMEMORY
+#include "shm_msgs.h"
+extern SHMmsgs shm;
+#define USE_SHM true
+#else
+#define USE_SHM false
+#endif
 
 namespace dyros_bolt_controller
 {
@@ -86,7 +91,7 @@ private:
     double control_time_;
 
     bool shutdown_flag_;
-
+protected:
     ros::Subscriber joint_command_sub_;
     ros::Subscriber jumping_command_sub_;
     ros::Subscriber rl_command_sub_;
@@ -102,7 +107,7 @@ private:
     void shutdownCommandCallback(const std_msgs::StringConstPtr& msg);
     void jointControlActionCallback(const dyros_bolt_msgs::JointControlGoalConstPtr &goal);    
 
-protected:
+// protected:
     realtime_tools::RealtimePublisher<dyros_bolt_msgs::JointState> joint_state_pub_; 
     realtime_tools::RealtimePublisher<sensor_msgs::JointState> joint_robot_state_pub_;
 
@@ -125,6 +130,8 @@ protected:
     Vector6d right_foot_ft_; // current right ft sensor values
 
     Eigen::Quaterniond base_quat_; ///< IMU data without filter    
+    Eigen::Quaterniond base_quat_direct_;
+    Eigen::Vector3d base_pose_;
     tf::Quaternion imu_data_; ///< IMU data with filter
     Vector3d gyro_; // current gyro sensor values
     Vector3d accelometer_; // current accelometer values
@@ -151,6 +158,9 @@ protected:
     JointController joint_controller_;
     JumpingController jumping_controller_;
     RLController rl_controller_;
+#ifdef COMPILE_SHAREDMEMORY
+    // SHMmsgs shm;
+#endif
 
 };
 

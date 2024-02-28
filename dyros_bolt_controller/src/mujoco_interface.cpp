@@ -1,28 +1,32 @@
 #include "dyros_bolt_controller/mujoco_interface.h"
-
+#ifdef COMPILE_SHAREDMEMORY
+SHMmsgs shm("RobotData");
+#endif
 namespace dyros_bolt_controller {
 
 mujoco_interface::mujoco_interface(ros::NodeHandle &nh, double Hz):
     ControlBase(nh,Hz), rate_(Hz), dyn_hz(Hz)
 {
     nh.param<std::string>("ctrl_mode", ctrl_mode, "torque");
-
-    simulation_running_= true;
     mujoco_joint_set_pub_=nh.advertise<mujoco_ros_msgs::JointSet>("/mujoco_ros_interface/joint_set",100);
-    mujoco_sim_command_pub_=nh.advertise<std_msgs::String>("/mujoco_ros_interface/sim_command_con2sim",100);
-    mujoco_sim_command_sub_=nh.subscribe("/mujoco_ros_interface/sim_command_sim2con",100,&mujoco_interface::simCommandCallback,this);
 
     mujoco_joint_state_sub_ = nh.subscribe("/mujoco_ros_interface/joint_states",1,&mujoco_interface::jointStateCallback,this,ros::TransportHints().tcpNoDelay(true));
     mujoco_sim_time_sub_ = nh.subscribe("/mujoco_ros_interface/sim_time",1,&mujoco_interface::simTimeCallback,this,ros::TransportHints().tcpNoDelay(true));
     mujoco_sensor_state_sub_=nh.subscribe("/mujoco_ros_interface/sensor_states",1,&mujoco_interface::sensorStateCallback,this,ros::TransportHints().tcpNoDelay(true));
-
     mujoco_joint_set_msg_.position.resize(total_dof_);
-    mujoco_joint_set_msg_.torque.resize(total_dof_);
+    mujoco_joint_set_msg_.torque.resize(total_dof_);    
+    simulation_running_= true;
+
+
+    mujoco_sim_command_pub_=nh.advertise<std_msgs::String>("/mujoco_ros_interface/sim_command_con2sim",100);
+    mujoco_sim_command_sub_=nh.subscribe("/mujoco_ros_interface/sim_command_sim2con",100,&mujoco_interface::simCommandCallback,this);
+
 
     mujoco_sim_time =0.0;
     ROS_INFO("Waiting for connection with Mujoco Ros interface ");
     simready();
     ROS_INFO("Mujoco Ros interface Connected");
+    this->rl_controller_.setEnable(true);
 }
 
 void mujoco_interface::simready()
@@ -182,8 +186,44 @@ void mujoco_interface::compute()
   // std::cout << desired_q_ << std::endl;
 }
 
+void mujoco_interface::readDevice(){
+  #ifdef COMPILE_SHAREDMEMORY
+    // Go to shared memory
+    shm.writeData(this->q_, this->virtual_q_, this->q_dot_, this->virtual_q_dot_, this->torque_, this->base_pose_, this->base_quat_direct_, this->sim_time);
+    base_quat_ = rpyToQuaternion(virtual_q_(3), virtual_q_(4), virtual_q_(5));
+    this->mujoco_sim_time = static_cast<float>(this->sim_time);
+  #else
+    // Read data from ros topic by ros spin once
+    ros::spinOnce();
+
+    // Action
+    if (joint_control_as_.isNewGoalAvailable())
+    {
+      jointControlActionCallback(joint_control_as_.acceptNewGoal());
+    }    
+  #endif
+}
+
 void mujoco_interface::writeDevice()
 {
+
+  #ifdef COMPILE_SHAREDMEMORY
+  if (ctrl_mode == "position"){
+    shm.receiveCommand(desired_q_, 1);
+    mujoco_sim_last_time = mujoco_sim_time;
+  }
+  else if (ctrl_mode == "torque"){
+    // VectorQd init_q;
+    // init_q << 0.0, -0.1 ,-0.15, 0.4, -0.25, 0.0, 0.1, -0.15, 0.4, -0.25;
+    // VectorQd kp, kv;
+    // kp << pos_kp[0], pos_kp[1], pos_kp[2], pos_kp[3], pos_kp[4], pos_kp[5], pos_kp[6], pos_kp[7], pos_kp[8], pos_kp[9];
+    // kv << pos_kv[0], pos_kv[1], pos_kv[2], pos_kv[3], pos_kv[4], pos_kv[5], pos_kv[6], pos_kv[7], pos_kv[8], pos_kv[9];
+    // desired_torque_ = kp.array() * (init_q - q_).array() - kv.array() * q_dot_.array();
+    shm.receiveCommand(desired_torque_, 0);
+    mujoco_sim_last_time = mujoco_sim_time;
+  }
+
+  #else
   if (ctrl_mode == "position")
   {
     mujoco_joint_set_msg_.MODE = 0;
@@ -220,10 +260,21 @@ void mujoco_interface::writeDevice()
       mujoco_sim_last_time = mujoco_sim_time;
     }
   }
+  #endif
 }
 
 void mujoco_interface::wait()
 {
+// If I use real robot, there will be no "pausing the simulation", and therefore just rate_.sleep() will be enough
+// The implementations below are to stop the controller loop from running while the simulation is paused
+#ifdef COMPILE_SHAREDMEMORY
+  ros::Rate poll_rate(20000);
+  while ((mujoco_sim_time < (mujoco_sim_last_time + 1.0 / dyn_hz)) && ros::ok())
+  {
+      shm.writeTime(this->mujoco_sim_time);
+      poll_rate.sleep();
+  }
+#else
   bool test_b = false;
 
   ros::Rate poll_rate(20000);
@@ -243,6 +294,6 @@ void mujoco_interface::wait()
         poll_rate.sleep();
 
     }
+#endif
 }
-
 }

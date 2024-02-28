@@ -1,5 +1,5 @@
 <mujoco model="scene">
-    <option timestep='0.0005' iterations="50" tolerance="1e-5" solver="Newton" jacobian="dense" cone="elliptic" noslip_iterations="30" noslip_tolerance="1e-5"/>
+    <option timestep='0.0005' iterations="50" tolerance="1e-5" solver="CG" jacobian="dense" cone="elliptic" noslip_iterations="30" noslip_tolerance="1e-5"/>
     <size njmax="8000" nconmax="4000"/>
     <compiler angle="radian" meshdir="../meshes/stl/" balanceinertia="true" eulerseq="XYZ" />
 	<!-- <option gravity= "0 0 0"/> -->

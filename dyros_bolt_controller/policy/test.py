@@ -20,7 +20,7 @@ def main():
     # Read odd numbered lines from the input text file
     with open(input_txt_file, 'r') as file:
         lines = file.readlines()
-        odd_lines = [line.strip() for i, line in enumerate(lines) if i % 2 == 0]
+        odd_lines = [line.strip() for i, line in enumerate(lines) if i % 4 == 1]
 
     # Convert odd lines to tensors and pass through the model
     output_tensors = []

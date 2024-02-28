@@ -21,20 +21,14 @@ void RLController::compute()
     {
         observationAllocation(current_q_, current_q_dot_, virtual_q_dot_, base_quat_);
         this->action = torch::clamp(module.forward({queue_to_tensor(this->observation_history)}).toTensor(), -clip_actions, clip_actions) ;
+        // this->action = torch::clamp(module.forward({this->observation}).toTensor(), -clip_actions, clip_actions) ;
         this->action = this->action.to(torch::kDouble) ;
         Eigen::Map<Eigen::VectorXd> desired_torque_(this->action.data<double>(), this->action.numel());
-        // for(int i=0; i<total_dof_/2; i++)
-        // {
-        //     this->desired_torque_[i] = desired_torque_[i];
-        //     this->desired_torque_[i+total_dof_/2] = desired_torque_[i+total_dof_/2];
-        // }
-        //TODO: Check if desired torque is computed the same in isaacgym when obsv is 0. DONE
-        //TODO: Check frequency!!! DONE
+
         this->desired_torque_ = desired_torque_ * action_scale ;
-        // this->desired_torque_[1] = 10.;
+
         writeDebug(this->file);
     }
-    this->setEnable(true);
 }
 
 void RLController::observationAllocation(VectorQd current_q, VectorQd current_q_dot, Vector6d virtual_q_dot, Eigen::Quaterniond base_quat)
@@ -71,8 +65,8 @@ void RLController::observationAllocation(VectorQd current_q, VectorQd current_q_
     
     // this->observation = torch::zeros({1, this->observation_size});
     this->observation = torch::clamp(torch::cat(tensor_list, 1), -clip_observations, clip_observations) ;
-    std::cout << "observation: " << this->observation << std::endl;
-    std::cout << "observation: " << this->observation.sizes() << std::endl;
+    // std::cout << "observation: " << this->observation << std::endl;
+    // std::cout << "observation: " << this->observation.sizes() << std::endl;
     observation_history.push(observation);
     // observation_history.push(torch::ones({1, observation_size}, torch::kFloat)* (-1.));
 }
@@ -138,9 +132,9 @@ void RLController::writeDebug(std::ofstream& file){
 
         // Close the file
 
-        std::cout << "Data successfully written to file: " << dir << std::endl;
+        // std::cout << "Data successfully written to file: " << dir << std::endl;
     } else {
-        std::cerr << "Error: Unable to open file: " << dir << std::endl;
+        // std::cerr << "Error: Unable to open file: " << dir << std::endl;
     }
 }
 }
