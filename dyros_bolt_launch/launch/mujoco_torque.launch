@@ -2,6 +2,8 @@
   <node name="mujoco_ros" pkg="mujoco_ros" type="mujoco_ros" required="true" respawn="false" output="screen">
    <param name="license" type="string" value="$(env HOME)/mjkey.txt" />
    <param name="model_file" type="string" value="$(find dyros_bolt_description)/robots/bolt_10dof.xml"/>
+   <!-- BOLT6 VERSION -->
+   <!-- <param name="model_file" type="string" value="$(find dyros_bolt_description)/robots/bolt_8dof_tq.xml"/> -->
    <!-- <param name="model_file" type="string" value="$(find dyros_bolt_description)/robots/bolt_6dof.xml"/> -->
   </node>
   <include file="$(find dyros_bolt_launch)/launch/common.launch">
@@ -10,3 +12,4 @@
   </include>
   <!-- <node name="dyros_gui" pkg="dyros_gui" type="dyros_gui" /> -->
 </launch>
+

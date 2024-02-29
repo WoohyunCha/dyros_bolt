@@ -30,7 +30,8 @@ int main(int argc, char **argv)
     
 
     double Hz;
-    nh.param<double>("control_frequency", Hz, 100); // set 100hz as default 
+    // nh.param<double>("control_frequency", Hz, 50); // set 100hz as default 
+    nh.getParam("control_frequency", Hz);
 
     if(mode == "simulation")
     {
@@ -51,7 +52,7 @@ int main(int argc, char **argv)
     {   ctr_obj->readDevice();
         ctr_obj->update();
         ctr_obj->compute(); // compute desired torque
-        ctr_obj->reflect(); // ros publish the values read from CAN
+        // ctr_obj->reflect(); // ros publish the values read from CAN
         ctr_obj->writeDevice();
         ctr_obj->wait();
         if(ctr_obj->isShuttingDown())

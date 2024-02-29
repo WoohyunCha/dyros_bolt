@@ -189,8 +189,8 @@ void mujoco_interface::compute()
 void mujoco_interface::readDevice(){
   #ifdef COMPILE_SHAREDMEMORY
     // Go to shared memory
-    shm.writeData(this->q_, this->virtual_q_, this->q_dot_, this->virtual_q_dot_, this->torque_, this->base_pose_, this->base_quat_direct_, this->sim_time);
-    base_quat_ = rpyToQuaternion(virtual_q_(3), virtual_q_(4), virtual_q_(5));
+    shm.writeData(this->q_, this->q_dot_filtered_, this->virtual_q_dot_, this->torque_, this->base_pose_, this->base_quat_, this->sim_time);
+    this->virtual_q_ << this->base_pose_, QuaternionToEuler(this->base_quat_);
     this->mujoco_sim_time = static_cast<float>(this->sim_time);
   #else
     // Read data from ros topic by ros spin once
@@ -219,7 +219,7 @@ void mujoco_interface::writeDevice()
     // kp << pos_kp[0], pos_kp[1], pos_kp[2], pos_kp[3], pos_kp[4], pos_kp[5], pos_kp[6], pos_kp[7], pos_kp[8], pos_kp[9];
     // kv << pos_kv[0], pos_kv[1], pos_kv[2], pos_kv[3], pos_kv[4], pos_kv[5], pos_kv[6], pos_kv[7], pos_kv[8], pos_kv[9];
     // desired_torque_ = kp.array() * (init_q - q_).array() - kv.array() * q_dot_.array();
-    shm.receiveCommand(desired_torque_, 0);
+    shm.receiveCommand(this->desired_torque_, 0);
     mujoco_sim_last_time = mujoco_sim_time;
   }
 

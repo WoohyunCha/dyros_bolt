@@ -10,5 +10,7 @@
     <rosparam file="$(find dyros_bolt_controller)/odrive_config/odrive.yaml" />
     <rosparam file="$(find dyros_bolt_controller)/odrive_config/gain.yaml" />
     <rosparam file="$(find dyros_bolt_controller)/controller_config/obsscales.yaml" />
+    <rosparam file="$(find dyros_bolt_controller)/controller_config/controller.yaml" />
+    
   </node>
 </launch>

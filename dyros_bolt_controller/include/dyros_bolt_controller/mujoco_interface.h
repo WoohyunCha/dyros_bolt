@@ -24,6 +24,31 @@ Eigen::Quaterniond rpyToQuaternion(double roll, double pitch, double yaw) {
     return quaternion;
 }
 
+Eigen::Vector3d QuaternionToEuler(const Eigen::Quaterniond &quaternion) {
+    Eigen::Vector3d euler;
+
+    double w = quaternion.w();
+    double x = quaternion.x();
+    double y = quaternion.y();
+    double z = quaternion.z();
+
+    double t0 = +2.0 * (w * x + y * z);
+    double t1 = +1.0 - 2.0 * (x * x + y * y);
+    euler(0) = std::atan2(t0, t1);  // Roll
+
+    double t2 = +2.0 * (w * y - z * x);
+    t2 = t2 > +1.0 ? +1.0 : t2;
+    t2 = t2 < -1.0 ? -1.0 : t2;
+    euler(1) = std::asin(t2);       // Pitch
+
+    double t3 = +2.0 * (w * z + x * y);
+    double t4 = +1.0 - 2.0 * (y * y + z * z);
+    euler(2) = std::atan2(t3, t4);  // Yaw
+
+    return euler;  // The angles are in radians
+}
+
+
 namespace dyros_bolt_controller {
 
 class mujoco_interface : public ControlBase{
